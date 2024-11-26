@@ -21,6 +21,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Prepare Hedera Solo
         id: solo
         uses: OpenElements/hedera-solo-action@v0.4
@@ -30,6 +31,7 @@ jobs:
           echo "OPERATOR_ID=${{ steps.solo.outputs.accountId }}"
           echo "OPERATOR_KEY=${{ steps.solo.outputs.privateKey }}"
           echo "PUBLIC_KEY=${{ steps.solo.outputs.publicKey }}"
+
       - name: Install your package
         run: pip install -e .
 
@@ -38,5 +40,5 @@ jobs:
           OPERATOR_ID: ${{ steps.solo.outputs.accountId }}
           OPERATOR_KEY: ${{ steps.solo.outputs.privateKey }}
           PUBLIC_KEY: ${{ steps.solo.outputs.publicKey }}
-          NETWORK: 
+          NETWORK: 'solo'
         run: python test.py
