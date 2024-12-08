@@ -13,6 +13,7 @@ This is a Python SDK for interacting with the Hedera Hashgraph platform. It allo
   - [Creating a Token](#creating-a-token)
   - [Associating a Token](#associating-a-token)
   - [Transferring Tokens](#transferring-tokens)
+  - [Deleting a Token](#deleting-a-token)
   - [Transferring HBAR](#transferring-hbar)
 - [Contributing](#contributing)
 
@@ -130,6 +131,19 @@ transaction = (
         TransferTransaction()
         .add_token_transfer(token_id, operator_id, -amount)
         .add_token_transfer(token_id, recipient_id, amount)
+        .freeze_with(client)
+        .sign(operator_key)
+    )
+
+    transaction.execute(client)
+```
+
+### Deleting a Token
+
+```
+    transaction = (
+        TokenDeleteTransaction()
+        .set_token_id(TokenId(1, 1, 1)) # shard, realm, number
         .freeze_with(client)
         .sign(operator_key)
     )
