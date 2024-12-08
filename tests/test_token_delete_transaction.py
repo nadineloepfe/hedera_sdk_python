@@ -21,11 +21,11 @@ def generate_transaction_id(account_id_proto):
 
 def test_build_transaction_body(mock_account_ids):
     """Test building a token delete transaction body with a valid value."""
-    operator_id, _, node_account_id, token_id, _= mock_account_ids
+    account_id, _, node_account_id, token_id, _= mock_account_ids
 
     delete_tx = TokenDeleteTransaction()
     delete_tx.set_token_id(token_id)
-    delete_tx.transaction_id = generate_transaction_id(operator_id)
+    delete_tx.transaction_id = generate_transaction_id(account_id)
     delete_tx.node_account_id = node_account_id
 
     transaction_body = delete_tx.build_transaction_body()
