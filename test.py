@@ -9,7 +9,7 @@ from src.tokens.token_create_transaction import TokenCreateTransaction
 from src.tokens.token_associate_transaction import TokenAssociateTransaction
 from src.transaction.transfer_transaction import TransferTransaction
 from src.response_code import ResponseCode
-
+from src.tokens.token_delete_transaction import TokenDeleteTransaction
 
 def load_operator_credentials():
     """Load operator credentials from environment variables."""
@@ -121,6 +121,25 @@ def transfer_token(client, recipient_id, token_id):
         print(f"Token transfer failed: {str(e)}")
         sys.exit(1)
 
+def delete_token(client, token_id):
+    """Deletes the specified token on the Hedera network."""
+    transaction = (
+        TokenDeleteTransaction()
+        .set_token_id(token_id)
+        .freeze_with(client)
+    )
+    transaction.sign(client.operator_private_key)
+
+    try:
+        receipt = transaction.execute(client)
+        if receipt.status != ResponseCode.SUCCESS:
+            status_message = ResponseCode.get_name(receipt.status)
+            raise Exception(f"Token deletion failed with status: {status_message}")
+        print("Token deletion successful.")
+    except Exception as e:
+        print(f"Token deletion failed: {str(e)}")
+        sys.exit(1)
+
 def main():
     operator_id, operator_key = load_operator_credentials()
 
@@ -132,6 +151,7 @@ def main():
     token_id = create_token(client, operator_id)
     associate_token(client, recipient_id, recipient_private_key, token_id)
     transfer_token(client, recipient_id, token_id)
+    delete_token(client, token_id)
 
 if __name__ == "__main__":
     main()
