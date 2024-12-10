@@ -71,6 +71,7 @@ New Account Public Key: 8f444e36e8926def492adxxx...
 Token creation successful. Token ID: 0.0.5025xxx
 Token association successful.
 Token transfer successful.
+Token deletion successful.
 ```
 
 
@@ -143,7 +144,7 @@ transaction = (
 ```
     transaction = (
         TokenDeleteTransaction()
-        .set_token_id(TokenId(1, 1, 1)) # shard, realm, number
+        .set_token_id(token_id)
         .freeze_with(client)
         .sign(operator_key)
     )
