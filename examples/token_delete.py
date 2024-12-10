@@ -20,12 +20,13 @@ def delete_token():
 
     operator_id = AccountId.from_string(os.getenv('OPERATOR_ID'))
     operator_key = PrivateKey.from_string(os.getenv('OPERATOR_KEY'))
+    token_id = TokenId.from_string('TOKEN_ID')
 
     client.set_operator(operator_id, operator_key)
 
     transaction = (
         TokenDeleteTransaction()
-        .set_token_id(TokenId(1, 1, 1))
+        .set_token_id(token_id)
         .freeze_with(client)
         .sign(operator_key)
     )
