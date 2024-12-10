@@ -44,6 +44,7 @@ Before using the SDK, you need to configure your environment variables for the o
 ```
 OPERATOR_ID=0.0.1234xx
 OPERATOR_KEY=302e020100300506032b657004220420...
+ADMIN_KEY=302a300506032b65700321009308ecfdf...
 RECIPIENT_ID=0.0.789xx
 TOKEN_ID=0.0.100xx
 ```
@@ -148,7 +149,7 @@ transaction = (
         .freeze_with(client)
         .sign(operator_key)
     )
-
+    transaction.sign(admin_key)
     transaction.execute(client)
 ```
 

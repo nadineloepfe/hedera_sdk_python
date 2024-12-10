@@ -121,14 +121,16 @@ def transfer_token(client, recipient_id, token_id):
         print(f"Token transfer failed: {str(e)}")
         sys.exit(1)
 
-def delete_token(client, token_id):
+def delete_token(client, token_id, admin_key):
     """Deletes the specified token on the Hedera network."""
     transaction = (
         TokenDeleteTransaction()
         .set_token_id(token_id)
         .freeze_with(client)
     )
+    
     transaction.sign(client.operator_private_key)
+    transaction.sign(admin_key)
 
     try:
         receipt = transaction.execute(client)
