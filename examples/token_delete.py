@@ -33,7 +33,7 @@ def delete_token():
     try:
         receipt = transaction.execute(client)
         if receipt is not None and receipt.status == 'SUCCESS':
-            print(f"Token deletion succesful")
+            print(f"Token deletion successful")
         else:
             print(f"Token deletion failed.")
             sys.exit(1)
