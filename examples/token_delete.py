@@ -20,7 +20,8 @@ def delete_token():
 
     operator_id = AccountId.from_string(os.getenv('OPERATOR_ID'))
     operator_key = PrivateKey.from_string(os.getenv('OPERATOR_KEY'))
-    token_id = TokenId.from_string('TOKEN_ID')
+    admin_key = PrivateKey.from_string(os.getenv('ADMIN_KEY'))
+    token_id = TokenId.from_string(os.getenv('TOKEN_ID'))
 
     client.set_operator(operator_id, operator_key)
 
@@ -29,6 +30,7 @@ def delete_token():
         .set_token_id(token_id)
         .freeze_with(client)
         .sign(operator_key)
+        .sign(admin_key)
     )
 
     try:
