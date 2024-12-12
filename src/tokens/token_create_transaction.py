@@ -23,6 +23,7 @@ class TokenCreateTransaction(Transaction):
         self.decimals = None
         self.initial_supply = None
         self.treasury_account_id = None
+        self.admin_key = None
 
         self._default_transaction_fee = 3_000_000_000
 
@@ -50,7 +51,12 @@ class TokenCreateTransaction(Transaction):
         self._require_not_frozen()
         self.treasury_account_id = account_id
         return self
-
+    
+    def set_admin_key(self, admin_key): 
+        self._require_not_frozen()
+        self.admin_key = admin_key
+        return self
+    
     def build_transaction_body(self):
         """
         Builds and returns the protobuf transaction body for token creation.
@@ -75,7 +81,8 @@ class TokenCreateTransaction(Transaction):
             symbol=self.token_symbol,
             decimals=self.decimals,
             initialSupply=self.initial_supply,
-            treasury=self.treasury_account_id.to_proto()
+            treasury=self.treasury_account_id.to_proto(),
+            adminKey=self.admin_key.to_proto() if self.admin_key else None
         )
 
         transaction_body = self.build_base_transaction_body()

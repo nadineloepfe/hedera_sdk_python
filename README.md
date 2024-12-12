@@ -13,6 +13,7 @@ This is a Python SDK for interacting with the Hedera Hashgraph platform. It allo
   - [Creating a Token](#creating-a-token)
   - [Associating a Token](#associating-a-token)
   - [Transferring Tokens](#transferring-tokens)
+  - [Deleting a Token](#deleting-a-token)
   - [Transferring HBAR](#transferring-hbar)
 - [Contributing](#contributing)
 
@@ -43,6 +44,7 @@ Before using the SDK, you need to configure your environment variables for the o
 ```
 OPERATOR_ID=0.0.1234xx
 OPERATOR_KEY=302e020100300506032b657004220420...
+ADMIN_KEY=302a300506032b65700321009308ecfdf...
 RECIPIENT_ID=0.0.789xx
 TOKEN_ID=0.0.100xx
 ```
@@ -70,6 +72,7 @@ New Account Public Key: 8f444e36e8926def492adxxx...
 Token creation successful. Token ID: 0.0.5025xxx
 Token association successful.
 Token transfer successful.
+Token deletion successful.
 ```
 
 
@@ -134,6 +137,19 @@ transaction = (
         .sign(operator_key)
     )
 
+    transaction.execute(client)
+```
+
+### Deleting a Token
+
+```
+    transaction = (
+        TokenDeleteTransaction()
+        .set_token_id(token_id)
+        .freeze_with(client)
+        .sign(operator_key)
+    )
+    transaction.sign(admin_key)
     transaction.execute(client)
 ```
 
