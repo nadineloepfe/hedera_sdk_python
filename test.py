@@ -52,7 +52,7 @@ def create_new_account(client, initial_balance=100000000):
 
     return new_account_id, new_account_private_key
 
-def create_token(client, operator_id):
+def create_token(client, operator_id, admin_key):
     """Create a new token and return its TokenId instance."""
     transaction = (
         TokenCreateTransaction()
@@ -61,9 +61,11 @@ def create_token(client, operator_id):
         .set_decimals(2)
         .set_initial_supply(1000)
         .set_treasury_account_id(operator_id)
+        .set_admin_key(admin_key)
         .freeze_with(client)
     )
     transaction.sign(client.operator_private_key)
+    
 
     try:
         receipt = transaction.execute(client)
@@ -144,16 +146,17 @@ def delete_token(client, token_id, admin_key):
 
 def main():
     operator_id, operator_key = load_operator_credentials()
+    admin_key = PrivateKey.from_string(os.getenv('ADMIN_KEY'))
 
     network = Network(node_address='localhost:50211', node_account_id=AccountId(0, 0, 3))
     client = Client(network)
     client.set_operator(operator_id, operator_key)
 
     recipient_id, recipient_private_key = create_new_account(client)
-    token_id = create_token(client, operator_id)
+    token_id = create_token(client, operator_id, admin_key)
     associate_token(client, recipient_id, recipient_private_key, token_id)
     transfer_token(client, recipient_id, token_id)
-    delete_token(client, token_id)
+    delete_token(client, token_id, admin_key)
 
 if __name__ == "__main__":
     main()
