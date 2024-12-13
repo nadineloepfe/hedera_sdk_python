@@ -19,6 +19,7 @@ def create_token():
 
     operator_id = AccountId.from_string(os.getenv('OPERATOR_ID'))
     operator_key = PrivateKey.from_string(os.getenv('OPERATOR_KEY'))
+    admin_key = PrivateKey.from_string(os.getenv('ADMIN_KEY'))
 
     client.set_operator(operator_id, operator_key)
 
@@ -29,6 +30,7 @@ def create_token():
         .set_decimals(2)
         .set_initial_supply(10)
         .set_treasury_account_id(operator_id)
+        .set_admin_key(admin_key)
         .freeze_with(client)
         .sign(operator_key)
     )

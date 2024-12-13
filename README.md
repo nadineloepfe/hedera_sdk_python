@@ -78,7 +78,7 @@ Token deletion successful.
 
 ## Usage
 
-Below are examples of how to use the SDK for creating tokens, associating them with accounts, and transferring tokens (also see 'examples' directiory)
+Below are examples of how to use the SDK for creating tokens, associating them with accounts, and transferring or deleting tokens (also see 'examples' directiory)
 
 ### Creating an Account
 
@@ -105,6 +105,7 @@ transaction = (
         .set_decimals(2)
         .set_initial_supply(1000)
         .set_treasury_account_id(operator_id)
+        .set_admin_key(admin_key)
         .freeze_with(client)
     )
 
