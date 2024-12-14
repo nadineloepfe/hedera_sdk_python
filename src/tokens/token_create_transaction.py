@@ -1,6 +1,7 @@
 from src.transaction.transaction import Transaction
 from src.proto import token_create_pb2
 from src.response_code import ResponseCode
+from src.proto import basic_types_pb2
 
 class TokenCreateTransaction(Transaction):
     """
@@ -76,13 +77,17 @@ class TokenCreateTransaction(Transaction):
         ]):
             raise ValueError("Missing required fields")
 
+        key = basic_types_pb2.Key(
+            ed25519=self.admin_key.to_string() if self.admin_key else None
+        )
+
         token_create_body = token_create_pb2.TokenCreateTransactionBody(
             name=self.token_name,
             symbol=self.token_symbol,
             decimals=self.decimals,
             initialSupply=self.initial_supply,
             treasury=self.treasury_account_id.to_proto(),
-            adminKey=self.admin_key.to_proto() if self.admin_key else None
+            adminKey=key if self.admin_key else None
         )
 
         transaction_body = self.build_base_transaction_body()
