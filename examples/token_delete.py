@@ -12,7 +12,7 @@ from src.tokens.token_delete_transaction import TokenDeleteTransaction
 from src.client.network import Network
 from src.tokens.token_id import TokenId
 
-load_dotenv()
+load_dotenv() 
 
 def delete_token():
     network = Network(network='testnet')  
