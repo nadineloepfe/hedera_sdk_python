@@ -54,8 +54,12 @@ def create_new_account(client, initial_balance=100000000):
 
     return new_account_id, new_account_private_key
 
-def create_token(client, operator_id, admin_public_key_bytes):
+def create_token(client, operator_id, admin_key):
     """Create a new token and return its TokenId instance."""
+    admin_public_key_bytes = admin_key.public_key().public_bytes(
+        encoding=serialization.Encoding.Raw,
+        format=serialization.PublicFormat.Raw
+    )    
     transaction = (
         TokenCreateTransaction()
         .set_token_name("ExampleToken")
@@ -66,7 +70,7 @@ def create_token(client, operator_id, admin_public_key_bytes):
         .set_admin_key(admin_public_key_bytes)
         .freeze_with(client)
     )
-    # transaction.sign(admin_key)
+    transaction.sign(admin_key)
     transaction.sign(client.operator_private_key)
     
 
@@ -149,20 +153,14 @@ def delete_token(client, token_id, admin_key):
 
 def main():
     operator_id, operator_key = load_operator_credentials()
-    # admin_key = PrivateKey.from_string(os.getenv('ADMIN_KEY'))
     admin_key = PrivateKey.generate()
-    admin_public_key = admin_key.public_key()
-    admin_public_key_bytes = admin_public_key.public_bytes(
-        encoding=serialization.Encoding.Raw,
-        format=serialization.PublicFormat.Raw
-    )
 
     network = Network(node_address='localhost:50211', node_account_id=AccountId(0, 0, 3))
     client = Client(network)
     client.set_operator(operator_id, operator_key)
 
     recipient_id, recipient_private_key = create_new_account(client)
-    token_id = create_token(client, operator_id, admin_public_key_bytes)
+    token_id = create_token(client, operator_id, admin_key)
     associate_token(client, recipient_id, recipient_private_key, token_id)
     transfer_token(client, recipient_id, token_id)
     delete_token(client, token_id, admin_key)
