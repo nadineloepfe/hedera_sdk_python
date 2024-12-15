@@ -64,6 +64,7 @@ def create_token(client, operator_id, admin_key):
         .set_admin_key(admin_key)
         .freeze_with(client)
     )
+    transaction.sign(client.admin_key)
     transaction.sign(client.operator_private_key)
     
 
