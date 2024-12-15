@@ -147,7 +147,8 @@ def delete_token(client, token_id, admin_key):
 
 def main():
     operator_id, operator_key = load_operator_credentials()
-    admin_key = PrivateKey.from_string(os.getenv('ADMIN_KEY'))
+    # admin_key = PrivateKey.from_string(os.getenv('ADMIN_KEY'))
+    admin_key = PrivateKey.generate()
 
     network = Network(node_address='localhost:50211', node_account_id=AccountId(0, 0, 3))
     client = Client(network)
