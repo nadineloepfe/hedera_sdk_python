@@ -76,3 +76,18 @@ class PrivateKey:
             encryption_algorithm=serialization.NoEncryption()
         )
         return private_bytes.hex()
+
+
+    def to_bytes(self):
+        """
+        Returns the private key as bytes.
+
+        Returns:
+            bytes: The private key.
+        """
+        private_bytes = self._private_key.private_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PrivateFormat.Raw,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        return private_bytes
