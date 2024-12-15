@@ -109,6 +109,7 @@ transaction = (
         .freeze_with(client)
     )
 
+    transaction.sign(admin_key)
     transaction.sign(operator_key)
     transaction.execute(client)
 ```
@@ -148,9 +149,10 @@ transaction = (
         TokenDeleteTransaction()
         .set_token_id(token_id)
         .freeze_with(client)
-        .sign(operator_key)
     )
+
     transaction.sign(admin_key)
+    transaction.sign(operator_key)
     transaction.execute(client)
 ```
 

@@ -5,13 +5,11 @@ from src.client.client import Client
 from src.account.account_id import AccountId
 from src.account.account_create_transaction import AccountCreateTransaction
 from src.crypto.private_key import PrivateKey
-from src.crypto.public_key import PublicKey
 from src.tokens.token_create_transaction import TokenCreateTransaction
 from src.tokens.token_associate_transaction import TokenAssociateTransaction
 from src.transaction.transfer_transaction import TransferTransaction
 from src.response_code import ResponseCode
 from src.tokens.token_delete_transaction import TokenDeleteTransaction
-from cryptography.hazmat.primitives import serialization
 
 def load_operator_credentials():
     """Load operator credentials from environment variables."""
@@ -56,10 +54,7 @@ def create_new_account(client, initial_balance=100000000):
 
 def create_token(client, operator_id, admin_key):
     """Create a new token and return its TokenId instance."""
-    admin_public_key_bytes = admin_key.public_key().public_bytes(
-        encoding=serialization.Encoding.Raw,
-        format=serialization.PublicFormat.Raw
-    )    
+
     transaction = (
         TokenCreateTransaction()
         .set_token_name("ExampleToken")
@@ -67,7 +62,7 @@ def create_token(client, operator_id, admin_key):
         .set_decimals(2)
         .set_initial_supply(1000)
         .set_treasury_account_id(operator_id)
-        .set_admin_key(admin_public_key_bytes)
+        .set_admin_key(admin_key)
         .freeze_with(client)
     )
     transaction.sign(admin_key)

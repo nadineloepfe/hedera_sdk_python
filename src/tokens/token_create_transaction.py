@@ -2,6 +2,7 @@ from src.transaction.transaction import Transaction
 from src.proto import token_create_pb2
 from src.response_code import ResponseCode
 from src.proto import basic_types_pb2
+from cryptography.hazmat.primitives import serialization
 
 class TokenCreateTransaction(Transaction):
     """
@@ -77,9 +78,13 @@ class TokenCreateTransaction(Transaction):
         ]):
             raise ValueError("Missing required fields")
 
-        key = basic_types_pb2.Key(
-            ed25519=self.admin_key if self.admin_key else None
-        )
+        admin_key_proto = None
+        if self.admin_key:
+            admin_public_key_bytes = self.admin_key.public_key().public_bytes(
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw
+            )
+            admin_key_proto = basic_types_pb2.Key(ed25519=admin_public_key_bytes)
 
         token_create_body = token_create_pb2.TokenCreateTransactionBody(
             name=self.token_name,
@@ -87,7 +92,7 @@ class TokenCreateTransaction(Transaction):
             decimals=self.decimals,
             initialSupply=self.initial_supply,
             treasury=self.treasury_account_id.to_proto(),
-            adminKey=key if self.admin_key else None
+            adminKey=admin_key_proto
         )
 
         transaction_body = self.build_base_transaction_body()

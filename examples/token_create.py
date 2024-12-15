@@ -10,6 +10,7 @@ from src.account.account_id import AccountId
 from src.crypto.private_key import PrivateKey
 from src.tokens.token_create_transaction import TokenCreateTransaction
 from src.client.network import Network
+from cryptography.hazmat.primitives import serialization
 
 load_dotenv()
 
@@ -20,7 +21,7 @@ def create_token():
     operator_id = AccountId.from_string(os.getenv('OPERATOR_ID'))
     operator_key = PrivateKey.from_string(os.getenv('OPERATOR_KEY'))
     admin_key = PrivateKey.from_string(os.getenv('ADMIN_KEY'))
-
+    
     client.set_operator(operator_id, operator_key)
 
     transaction = (
@@ -33,8 +34,9 @@ def create_token():
         .set_admin_key(admin_key)
         .freeze_with(client)
         .sign(operator_key)
+        .sign(admin_key)
     )
-
+    
     try:
         receipt = transaction.execute(client)
         if receipt and receipt.tokenId:
