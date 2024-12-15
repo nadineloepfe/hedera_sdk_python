@@ -42,9 +42,13 @@ def test_build_transaction_body_without_admin_key(mock_account_ids):
     assert transaction_body.tokenCreation.initialSupply == 1000
     assert not transaction_body.tokenCreation.HasField("adminKey")
 
-def test_build_transaction_body(mock_account_ids, admin_key):
+def test_build_transaction_body(mock_account_ids):
     """Test building a token creation transaction body with valid values."""
     treasury_account, _, node_account_id, _, _ = mock_account_ids
+
+    private_key_admin = MagicMock()
+    private_key_admin.sign.return_value = b'admin_signature'
+    private_key_admin.public_key().public_bytes.return_value = b'admin_public_key'
 
     token_tx = TokenCreateTransaction()
     token_tx.set_token_name("MyToken")
@@ -53,7 +57,7 @@ def test_build_transaction_body(mock_account_ids, admin_key):
     token_tx.set_initial_supply(1000)
     token_tx.set_treasury_account_id(treasury_account)
     token_tx.transaction_id = generate_transaction_id(treasury_account)
-    token_tx.set_admin_key(admin_key[0])
+    token_tx.set_admin_key(private_key_admin)
     token_tx.node_account_id = node_account_id
 
     transaction_body = token_tx.build_transaction_body()
@@ -62,7 +66,7 @@ def test_build_transaction_body(mock_account_ids, admin_key):
     assert transaction_body.tokenCreation.symbol == "MTK"
     assert transaction_body.tokenCreation.decimals == 2
     assert transaction_body.tokenCreation.initialSupply == 1000
-    assert transaction_body.tokenCreation.adminKey.ed25519 == admin_key[1]
+    assert transaction_body.tokenCreation.adminKey.ed25519 == b'admin_public_key'
 
 def test_missing_fields():
     """Test that building a transaction without required fields raises a ValueError."""
@@ -131,19 +135,9 @@ def test_to_proto_without_admin_key(mock_account_ids):
 
     assert not transaction_body.tokenCreation.HasField("adminKey")
 
-def test_to_proto(mock_account_ids, admin_key):
+def test_to_proto(mock_account_ids):
     """Test converting the token creation transaction to protobuf format after signing."""
     treasury_account, _, node_account_id, _, _ = mock_account_ids
-
-    token_tx = TokenCreateTransaction()
-    token_tx.set_token_name("MyToken")
-    token_tx.set_token_symbol("MTK")
-    token_tx.set_decimals(2)
-    token_tx.set_initial_supply(1000)
-    token_tx.set_treasury_account_id(treasury_account)
-    token_tx.set_admin_key(admin_key[0])
-    token_tx.transaction_id = generate_transaction_id(treasury_account)
-    token_tx.node_account_id = node_account_id
 
     private_key = MagicMock()
     private_key.sign.return_value = b'signature'
@@ -153,6 +147,16 @@ def test_to_proto(mock_account_ids, admin_key):
     private_key_admin.sign.return_value = b'admin_signature'
     private_key_admin.public_key().public_bytes.return_value = b'admin_public_key'
 
+    token_tx = TokenCreateTransaction()
+    token_tx.set_token_name("MyToken")
+    token_tx.set_token_symbol("MTK")
+    token_tx.set_decimals(2)
+    token_tx.set_initial_supply(1000)
+    token_tx.set_treasury_account_id(treasury_account)
+    token_tx.set_admin_key(private_key_admin)
+    token_tx.transaction_id = generate_transaction_id(treasury_account)
+    token_tx.node_account_id = node_account_id
+
     token_tx.sign(private_key)
     token_tx.sign(private_key_admin)
     proto = token_tx.to_proto()
@@ -160,6 +164,5 @@ def test_to_proto(mock_account_ids, admin_key):
     assert len(proto.signedTransactionBytes) > 0
 
     transaction = transaction_pb2.Transaction.FromString(proto.signedTransactionBytes)
-    transaction_body = transaction_body_pb2.TransactionBody.FromString(transaction.bodyBytes)
 
-    assert transaction_body.tokenCreation.adminKey.ed25519 == admin_key[1]
+    assert transaction.body.tokenCreation.adminKey.ed25519 == b'admin_public_key'
