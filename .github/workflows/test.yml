@@ -30,6 +30,7 @@ jobs:
         run: |
           echo "OPERATOR_ID=${{ steps.solo.outputs.accountId }}"
           echo "OPERATOR_KEY=${{ steps.solo.outputs.privateKey }}"
+          echo "ADMIN_KEY=${{ steps.solo.outputs.privateKey }}"
           echo "PUBLIC_KEY=${{ steps.solo.outputs.publicKey }}"
 
       - name: Install your package
@@ -39,6 +40,7 @@ jobs:
         env:
           OPERATOR_ID: ${{ steps.solo.outputs.accountId }}
           OPERATOR_KEY: ${{ steps.solo.outputs.privateKey }}
+          ADMIN_KEY: ${{ steps.solo.outputs.privateKey }}
           PUBLIC_KEY: ${{ steps.solo.outputs.publicKey }}
           NETWORK: 
         run: python test.py

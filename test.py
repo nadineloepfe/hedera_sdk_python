@@ -9,7 +9,7 @@ from src.tokens.token_create_transaction import TokenCreateTransaction
 from src.tokens.token_associate_transaction import TokenAssociateTransaction
 from src.transaction.transfer_transaction import TransferTransaction
 from src.response_code import ResponseCode
-
+from src.tokens.token_delete_transaction import TokenDeleteTransaction
 
 def load_operator_credentials():
     """Load operator credentials from environment variables."""
@@ -52,8 +52,9 @@ def create_new_account(client, initial_balance=100000000):
 
     return new_account_id, new_account_private_key
 
-def create_token(client, operator_id):
+def create_token(client, operator_id, admin_key):
     """Create a new token and return its TokenId instance."""
+
     transaction = (
         TokenCreateTransaction()
         .set_token_name("ExampleToken")
@@ -61,9 +62,12 @@ def create_token(client, operator_id):
         .set_decimals(2)
         .set_initial_supply(1000)
         .set_treasury_account_id(operator_id)
+        .set_admin_key(admin_key)
         .freeze_with(client)
     )
+    transaction.sign(admin_key)
     transaction.sign(client.operator_private_key)
+    
 
     try:
         receipt = transaction.execute(client)
@@ -121,17 +125,40 @@ def transfer_token(client, recipient_id, token_id):
         print(f"Token transfer failed: {str(e)}")
         sys.exit(1)
 
+def delete_token(client, token_id, admin_key):
+    """Deletes the specified token on the Hedera network."""
+    transaction = (
+        TokenDeleteTransaction()
+        .set_token_id(token_id)
+        .freeze_with(client)
+    )
+    
+    transaction.sign(client.operator_private_key)
+    transaction.sign(admin_key)
+
+    try:
+        receipt = transaction.execute(client)
+        if receipt.status != ResponseCode.SUCCESS:
+            status_message = ResponseCode.get_name(receipt.status)
+            raise Exception(f"Token deletion failed with status: {status_message}")
+        print("Token deletion successful.")
+    except Exception as e:
+        print(f"Token deletion failed: {str(e)}")
+        sys.exit(1)
+
 def main():
     operator_id, operator_key = load_operator_credentials()
+    admin_key = PrivateKey.generate()
 
     network = Network(node_address='localhost:50211', node_account_id=AccountId(0, 0, 3))
     client = Client(network)
     client.set_operator(operator_id, operator_key)
 
     recipient_id, recipient_private_key = create_new_account(client)
-    token_id = create_token(client, operator_id)
+    token_id = create_token(client, operator_id, admin_key)
     associate_token(client, recipient_id, recipient_private_key, token_id)
     transfer_token(client, recipient_id, token_id)
+    delete_token(client, token_id, admin_key)
 
 if __name__ == "__main__":
     main()
