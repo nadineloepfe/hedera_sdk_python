@@ -78,7 +78,7 @@ class TokenCreateTransaction(Transaction):
             raise ValueError("Missing required fields")
 
         key = basic_types_pb2.Key(
-            ed25519=self.admin_key.to_string() if self.admin_key else None
+            ed25519=self.admin_key.to_string().decode() if self.admin_key else None
         )
 
         token_create_body = token_create_pb2.TokenCreateTransactionBody(
