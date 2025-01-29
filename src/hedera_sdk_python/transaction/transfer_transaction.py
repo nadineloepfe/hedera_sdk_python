@@ -19,6 +19,7 @@ class TransferTransaction(Transaction):
             token_transfers (dict[TokenId, dict[AccountId, int]], optional): Initial token transfers.
         """
         super().__init__()
+        from collections import defaultdict
         self.hbar_transfers = defaultdict(int)
         self.token_transfers = defaultdict(lambda: defaultdict(int))
         self._default_transaction_fee = 100_000_000
@@ -97,7 +98,7 @@ class TransferTransaction(Transaction):
 
         return transaction_body
 
-    def _execute_transaction(self, client, transaction_proto):
+    async def _execute_transaction(self, client, transaction_proto):
         """
         Executes the transfer transaction using the provided client.
 
@@ -108,17 +109,17 @@ class TransferTransaction(Transaction):
         Returns:
             TransactionReceipt: The receipt from the network.
         """
-        response = client.crypto_stub.cryptoTransfer(transaction_proto)
+        response = await client.crypto_stub.cryptoTransfer(transaction_proto)
 
         if response.nodeTransactionPrecheckCode != ResponseCode.OK:
             error_code = response.nodeTransactionPrecheckCode
             error_message = ResponseCode.get_name(error_code)
             raise Exception(f"Error during transaction submission: {error_code} ({error_message})")
 
-        receipt = self.get_receipt(client)
+        receipt = await self.get_receipt(client)
         return receipt
 
-    def get_receipt(self, client, timeout=60):
+    async def get_receipt(self, client, timeout=60):
         """
         Retrieves the receipt for the transaction.
 
@@ -132,4 +133,5 @@ class TransferTransaction(Transaction):
         if self.transaction_id is None:
             raise Exception("Transaction ID is not set.")
 
-        return client.get_transaction_receipt(self.transaction_id, timeout)
+        # The client.get_transaction_receipt presumably is async
+        return await client.get_transaction_receipt(self.transaction_id, timeout)

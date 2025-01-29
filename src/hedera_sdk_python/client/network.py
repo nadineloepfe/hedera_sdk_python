@@ -7,18 +7,11 @@ class Network:
     Manages the network configuration for connecting to the Hedera network.
     """
 
-    MIRROR_ADDRESS_DEFAULT = {
-        'mainnet': 'hcs.mainnet.mirrornode.hedera.com:5600',
-        'testnet': 'hcs.testnet.mirrornode.hedera.com:5600',
-        'previewnet': 'hcs.previewnet.mirrornode.hedera.com:5600',
-        'solo': 'localhost:5600'
-    }
-
     MIRROR_NODE_URLS = {
         'mainnet': 'https://mainnet-public.mirrornode.hedera.com',
         'testnet': 'https://testnet.mirrornode.hedera.com',
         'previewnet': 'https://previewnet.mirrornode.hedera.com',
-        'solo': 'http://localhost:8080'  
+        'solo': 'localhost:8080'
     }
 
     DEFAULT_NODES = {
@@ -53,47 +46,36 @@ class Network:
         ],
     }
 
-    def __init__(
-        self,
-        network: str = 'testnet',
-        nodes: list = None,
-        mirror_address: str = None,
-    ):
+    def __init__(self, node_address=None, node_account_id=None, network='testnet'):
         """
-        Initializes the Network with the specified network name or custom config.
+        Initializes the Network with the specified network name.
 
         Args:
-            network (str): One of 'mainnet', 'testnet', 'previewnet', 'solo', or a custom name if you prefer.
-            nodes (list, optional): A list of (node_address, AccountId) pairs. If provided, we skip fetching from the mirror.
-            mirror_address (str, optional): A mirror node address (host:port) for topic queries.
-                                            If not provided, we'll use a default from MIRROR_ADDRESS_DEFAULT[network].
+            network (str): The network to connect to ('mainnet', 'testnet', 'previewnet').
         """
         self.network = network
-        self.mirror_address = mirror_address or self.MIRROR_ADDRESS_DEFAULT.get(network, 'localhost:5600')
+        if network == 'solo':
+            self._mirror_address = 'localhost:5600'
+        else:
+            self._mirror_address = f"hcs.{network}.mirrornode.hedera.com:5600"
 
-        if nodes is not None:
-            self.nodes = nodes
+        if node_address and node_account_id:
+            self.nodes = [(node_address, node_account_id)]
         else:
             self.nodes = self._fetch_nodes_from_mirror_node()
             if not self.nodes:
-                if self.network in self.DEFAULT_NODES:
-                    self.nodes = self.DEFAULT_NODES[self.network]
-                else:
-                    raise ValueError(f"No default nodes for network='{self.network}'")
+                self.nodes = self.DEFAULT_NODES[self.network]
 
-        self._select_node()
+            self._select_node()
 
     def _fetch_nodes_from_mirror_node(self):
         """
-        Fetches the list of nodes from the Hedera Mirror Node REST API.
-        Returns:
-            list: A list of tuples [(node_address, AccountId), ...].
-        """
-        base_url = self.MIRROR_NODE_URLS.get(self.network)
-        if not base_url:
-            print(f"No known mirror node URL for network='{self.network}'. Skipping fetch.")
-            return []
+        Fetches the list of nodes from the Hedera Mirror Node API.
 
+        Returns:
+            list: A list of tuples containing the node address and AccountId.
+        """
+        base_url = self.MIRROR_NODE_URLS[self.network]
         url = f"{base_url}/api/v1/network/nodes?limit=100&order=desc"
 
         try:
@@ -140,4 +122,4 @@ class Network:
         """
         Return the configured mirror node address used for mirror queries.
         """
-        return self.mirror_address
+        return self._mirror_address

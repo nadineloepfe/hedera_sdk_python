@@ -146,7 +146,7 @@ class AccountCreateTransaction(Transaction):
 
         return transaction_body
 
-    def _execute_transaction(self, client, transaction_proto):
+    async def _execute_transaction(self, client, transaction_proto):
         """
         Executes the account creation transaction using the provided client.
 
@@ -160,7 +160,7 @@ class AccountCreateTransaction(Transaction):
         Raises:
             Exception: If the transaction submission fails or receives an error response.
         """
-        response = client.crypto_stub.createAccount(transaction_proto)
+        response = await client.crypto_stub.createAccount(transaction_proto)
 
         if response.nodeTransactionPrecheckCode != ResponseCode.OK:
             error_code = response.nodeTransactionPrecheckCode
@@ -169,10 +169,10 @@ class AccountCreateTransaction(Transaction):
                 f"Error during transaction submission: {error_code} ({error_message})"
             )
 
-        receipt = self.get_receipt(client)
+        receipt = await self.get_receipt(client)
         return receipt
 
-    def get_receipt(self, client, timeout=60):
+    async def get_receipt(self, client, timeout=60):
         """
         Retrieves the receipt for the transaction.
 
@@ -188,4 +188,5 @@ class AccountCreateTransaction(Transaction):
         """
         if self.transaction_id is None:
             raise Exception("Transaction ID is not set. Did you forget to sign or execute the transaction?")
-        return client.get_transaction_receipt(self.transaction_id, timeout)
+        
+        return await client.get_transaction_receipt(self.transaction_id, timeout)

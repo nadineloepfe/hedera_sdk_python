@@ -62,7 +62,7 @@ class TokenCreateTransaction(Transaction):
         self.treasury_account_id = account_id
         return self
 
-    def set_admin_key(self, admin_key): 
+    def set_admin_key(self, admin_key):
         self._require_not_frozen()
         self.admin_key = admin_key
         return self
@@ -105,7 +105,7 @@ class TokenCreateTransaction(Transaction):
 
         return transaction_body
 
-    def _execute_transaction(self, client, transaction_proto):
+    async def _execute_transaction(self, client, transaction_proto):
         """
         Executes the token creation transaction using the provided client.
 
@@ -119,17 +119,17 @@ class TokenCreateTransaction(Transaction):
         Raises:
             Exception: If the transaction submission fails or receives an error response.
         """
-        response = client.token_stub.createToken(transaction_proto)
+        response = await client.token_stub.createToken(transaction_proto)
 
         if response.nodeTransactionPrecheckCode != ResponseCode.OK:
             error_code = response.nodeTransactionPrecheckCode
             error_message = ResponseCode.get_name(error_code)
             raise Exception(f"Error during transaction submission: {error_code} ({error_message})")
 
-        receipt = self.get_receipt(client)
+        receipt = await self.get_receipt(client)
         return receipt
 
-    def get_receipt(self, client, timeout=60):
+    async def get_receipt(self, client, timeout=60):
         """
         Retrieves the receipt for the transaction.
 
@@ -145,6 +145,5 @@ class TokenCreateTransaction(Transaction):
         """
         if self.transaction_id is None:
             raise Exception("Transaction ID is not set.")
-        
-        receipt = client.get_transaction_receipt(self.transaction_id, timeout)
-        return receipt
+
+        return await client.get_transaction_receipt(self.transaction_id, timeout)

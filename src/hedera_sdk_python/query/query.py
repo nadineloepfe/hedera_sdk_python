@@ -1,3 +1,4 @@
+import asyncio
 import time
 from hedera_sdk_python.hapi.services import query_header_pb2
 from hedera_sdk_python.response_code import ResponseCode
@@ -77,7 +78,7 @@ class Query:
         tx.add_hbar_transfer(payer_account_id, -amount.to_tinybars())
         tx.add_hbar_transfer(node_account_id, amount.to_tinybars())
 
-        tx.transaction_fee = 100_000_000 
+        tx.transaction_fee = 100_000_000
         tx.node_account_id = node_account_id
         tx.transaction_id = TransactionId.generate(payer_account_id)
 
@@ -105,7 +106,7 @@ class Query:
         """
         raise NotImplementedError("_map_response must be implemented by subclasses.")
 
-    def execute(self, client, timeout=60):
+    async def execute(self, client, timeout=60):
         """
         Executes this query up to `max_attempts` times, trying different nodes if necessary.
         """
@@ -118,7 +119,7 @@ class Query:
                 self.current_node_account_id = self.node_account_ids[self.node_index]
 
                 request = self._make_request()
-                response = client.send_query(self, self.current_node_account_id, timeout=timeout)
+                response = await client.send_query(self, self.current_node_account_id, timeout=timeout)
 
                 if response is None:
                     continue
@@ -129,6 +130,7 @@ class Query:
                 elif status in [ResponseCode.BUSY, ResponseCode.UNKNOWN]:
                     continue
                 else:
+                    from hedera_sdk_python.response_code import ResponseCode
                     raise Exception(f"Query failed with status: {ResponseCode.get_name(status)}")
 
             except Exception as e:

@@ -21,13 +21,13 @@ class Transaction:
         self.transaction_id = None
         self.node_account_id = None
         self.transaction_fee = None
-        self.transaction_valid_duration = 120 
+        self.transaction_valid_duration = 120
         self.generate_record = False
         self.memo = ""
         self.transaction_body_bytes = None
         self.signature_map = basic_types_pb2.SignatureMap()
         self._default_transaction_fee = 2_000_000
-        self.operator_account_id = None  
+        self.operator_account_id = None
 
     def sign(self, private_key):
         """
@@ -46,7 +46,6 @@ class Transaction:
             self.transaction_body_bytes = self.build_transaction_body().SerializeToString()
 
         signature = private_key.sign(self.transaction_body_bytes)
-
         public_key_bytes = private_key.public_key().to_bytes_raw()
 
         sig_pair = basic_types_pb2.SignaturePair(
@@ -55,7 +54,6 @@ class Transaction:
         )
 
         self.signature_map.sigPair.append(sig_pair)
-
         return self
 
     def to_proto(self):
@@ -109,7 +107,7 @@ class Transaction:
 
         return self
 
-    def execute(self, client):
+    async def execute(self, client):
         """
         Executes the transaction on the Hedera network using the provided client.
 
@@ -132,8 +130,7 @@ class Transaction:
             self.sign(client.operator_private_key)
 
         transaction_proto = self.to_proto()
-        response = self._execute_transaction(client, transaction_proto)
-
+        response = await self._execute_transaction(client, transaction_proto)
         return response
 
     def is_signed_by(self, public_key):
@@ -167,7 +164,7 @@ class Transaction:
             NotImplementedError: Always, since subclasses must implement this method.
         """
         raise NotImplementedError("Subclasses must implement build_transaction_body()")
-    
+
     def build_base_transaction_body(self):
         """
         Builds the base transaction body including common fields.
@@ -179,9 +176,9 @@ class Transaction:
             ValueError: If required IDs are not set.
         """
         if self.transaction_id is None:
-                if self.operator_account_id is None:
-                    raise ValueError("Operator account ID is not set.")
-                self.transaction_id = TransactionId.generate(self.operator_account_id)
+            if self.operator_account_id is None:
+                raise ValueError("Operator account ID is not set.")
+            self.transaction_id = TransactionId.generate(self.operator_account_id)
 
         transaction_id_proto = self.transaction_id.to_proto()
 
@@ -193,14 +190,13 @@ class Transaction:
         transaction_body.nodeAccountID.CopyFrom(self.node_account_id.to_proto())
 
         transaction_body.transactionFee = self.transaction_fee or self._default_transaction_fee
-
         transaction_body.transactionValidDuration.seconds = self.transaction_valid_duration
         transaction_body.generateRecord = self.generate_record
         transaction_body.memo = self.memo
 
         return transaction_body
 
-    def _execute_transaction(self):
+    async def _execute_transaction(self, client, transaction_proto):
         """
         Abstract method to execute the transaction.
 

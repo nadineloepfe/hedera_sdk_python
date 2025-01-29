@@ -59,7 +59,7 @@ class TokenDeleteTransaction(Transaction):
 
         return transaction_body
 
-    def _execute_transaction(self, client, transaction_proto):
+    async def _execute_transaction(self, client, transaction_proto):
         """
         Executes the token deletion transaction using the provided client.
 
@@ -73,17 +73,17 @@ class TokenDeleteTransaction(Transaction):
         Raises:
             Exception: If the transaction submission fails or receives an error response.
         """
-        response = client.token_stub.deleteToken(transaction_proto)
+        response = await client.token_stub.deleteToken(transaction_proto)
 
         if response.nodeTransactionPrecheckCode != ResponseCode.OK:
             error_code = response.nodeTransactionPrecheckCode
             error_message = ResponseCode.get_name(error_code)
             raise Exception(f"Error during transaction submission: {error_code} ({error_message})")
 
-        receipt = self.get_receipt(client)
+        receipt = await self.get_receipt(client)
         return receipt
 
-    def get_receipt(self, client, timeout=60):
+    async def get_receipt(self, client, timeout=60):
         """
         Retrieves the receipt for the transaction.
 
@@ -100,5 +100,4 @@ class TokenDeleteTransaction(Transaction):
         if self.transaction_id is None:
             raise Exception("Transaction ID is not set.")
 
-        receipt = client.get_transaction_receipt(self.transaction_id, timeout)
-        return receipt
+        return await client.get_transaction_receipt(self.transaction_id, timeout)

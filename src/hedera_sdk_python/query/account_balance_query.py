@@ -98,3 +98,26 @@ class CryptoGetAccountBalanceQuery(Query):
             return AccountBalance.from_proto(balance_proto)
         else:
             raise Exception("Account balance not found in the response.")
+
+    async def execute(self, client):
+        """
+        Executes the account balance query against the provided client asynchronously.
+
+        Args:
+            client (Client): The async client to use for sending the query.
+
+        Returns:
+            AccountBalance: The account balance extracted from the network response.
+
+        Raises:
+            Exception: If any precheck failure or network error occurs.
+        """
+        request = self._make_request()
+        response = await client.send_query(self, client.node_account_id)
+        precheck_code = self._get_status_from_response(response)
+        if precheck_code != 0:  # e.g. 0 = SUCCESS
+            from hedera_sdk_python.response_code import ResponseCode
+            code_name = ResponseCode.get_name(precheck_code)
+            raise Exception(f"Precheck failed with code {code_name} ({precheck_code})")
+
+        return self._map_response(response)

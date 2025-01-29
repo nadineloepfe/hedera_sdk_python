@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, Callable, Union
-import threading
+import asyncio
 from hedera_sdk_python.consensus.topic_message import TopicMessage
 from hedera_sdk_python.hapi.mirror import consensus_service_pb2 as mirror_proto
 from hedera_sdk_python.hapi.services import basic_types_pb2, timestamp_pb2
@@ -72,12 +72,21 @@ class TopicMessageQuery:
         self._chunking_enabled = enabled
         return self
 
-    def subscribe(
+    async def subscribe(
         self,
         client,
         on_message: Callable[[TopicMessage], None],
         on_error: Optional[Callable[[Exception], None]] = None,
     ):
+        """
+        Subscribes to messages from the configured topic. For each received message, `on_message` is invoked.
+        If an error occurs, `on_error` is invoked (if provided).
+
+        Args:
+            client: The async client with a mirror_stub to use for streaming messages.
+            on_message: A callback function invoked for each new TopicMessage.
+            on_error: An optional callback function invoked if an error occurs.
+        """
         if not self._topic_id:
             raise ValueError("Topic ID must be set before subscribing.")
         if not client.mirror_stub:
@@ -91,15 +100,10 @@ class TopicMessageQuery:
         if self._limit is not None:
             request.limit = self._limit
 
-        def run_stream():
-            try:
-                message_stream = client.mirror_stub.subscribeTopic(request)
-                for response in message_stream:
-                    msg_obj = TopicMessage.from_proto(response)
-                    on_message(msg_obj)
-            except Exception as e:
-                if on_error:
-                    on_error(e)
-
-        thread = threading.Thread(target=run_stream, daemon=True)
-        thread.start()
+        try:
+            async for response in client.mirror_stub.subscribeTopic(request):
+                msg_obj = TopicMessage.from_proto(response)
+                on_message(msg_obj)
+        except Exception as e:
+            if on_error:
+                on_error(e)
