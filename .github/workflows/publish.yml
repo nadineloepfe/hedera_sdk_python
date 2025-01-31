@@ -19,11 +19,11 @@ jobs:
       - name: Upgrade pip
         run: pip install --upgrade pip
 
-      - name: Install dependencies (including uv)
-        run: pip install build pdm-backend uv
+      - name: Install build & pdm-backend
+        run: pip install build pdm-backend
 
       - name: Generate Protobuf (if needed)
-        run: uv run generate_proto.py
+        run: bash ./generate_proto.sh
 
       - name: Build wheel and sdist
         run: python -m build
