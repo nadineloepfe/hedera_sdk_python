@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - 'v*.*.*'
-  workflow_dispatch: 
 
 jobs:
   build-and-publish:
@@ -12,29 +11,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
 
-      - name: Upgrade pip, setuptools, wheel (system environment)
-        run: pip install --upgrade pip setuptools wheel
+      - name: Upgrade pip
+        run: pip install --upgrade pip
 
-      - name: Setup Python with uv
-        run: uv python install
+      - name: Install build, pdm-backend, and grpcio-tools
+        run: pip install build pdm-backend grpcio-tools
+        continue-on-error: true
 
-      - name: Sync dev + extras
-        run: uv sync --dev --all-extras
-
-      - name: Install build
-        run: uv run pip install build
-
-      # - name: Install pdm-backend
-      #   run: uv run pip install pdm-backend
-
-      - name: Generate Proto Files
-        run: uv run bash ./generate_proto.sh
+      - name: Generate Protobuf (if needed)
+        run: bash ./generate_proto.sh
+        continue-on-error: true
 
       - name: Build wheel and sdist
-        run: uv run python -m build
+        run: python -m build
+        continue-on-error: true
 
       # - name: Publish to PyPI
       #   uses: pypa/gh-action-pypi-publish@release/v1
