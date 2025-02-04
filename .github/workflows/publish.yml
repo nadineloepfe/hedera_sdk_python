@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch: 
 
 jobs:
   build-and-publish:
@@ -14,27 +15,29 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v4
 
-      - name: Install setuptools wheel
+      - name: Upgrade pip, setuptools, wheel (system environment)
         run: pip install --upgrade pip setuptools wheel
 
-      - name: Setup Python
+      - name: Setup Python with uv
         run: uv python install
 
-      - name: Install dependencies
-        run: uv sync --all-extras --dev
+      - name: Sync dev + extras
+        run: uv sync --dev --all-extras
 
-      - name: Install build & pdm-backend into uv
-        run: uv run pip install build pdm-backend
+      - name: Install build
+        run: uv run pip install build
 
-      - name: Generate Protobuf (if needed)
-        run: bash ./generate_proto.sh
+      # - name: Install pdm-backend
+      #   run: uv run pip install pdm-backend
+
+      - name: Generate Proto Files
+        run: uv run bash ./generate_proto.sh
 
       - name: Build wheel and sdist
         run: uv run python -m build
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-
+      # - name: Publish to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     user: __token__
+      #     password: ${{ secrets.PYPI_API_TOKEN }}
